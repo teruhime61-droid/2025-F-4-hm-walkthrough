@@ -1,0 +1,644 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Jungle Snake — Classic Snake Game</title>
+<style>
+  :root{
+    --jungle-dark:#0b3d1f;
+    --jungle-green:#1b7a3a;
+    --jungle-soft:#dff6e6;
+    --leaf:#1f9a46;
+    --accent:#183b2a;
+    --panel-bg: rgba(255,255,255,0.95);
+    --glass: rgba(255,255,255,0.6);
+    --muted:#5b6b60;
+    --shadow: 0 8px 30px rgba(0,0,0,0.12);
+  }
+
+  html,body{
+    height:100%;
+    margin:0;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background: linear-gradient(180deg, #e9f6ec 0%, #ffffff 100%);
+    color: var(--accent);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+
+  .container{
+    max-width:980px;
+    margin:28px auto;
+    padding:20px;
+  }
+
+  .card{
+    background:var(--panel-bg);
+    border-radius:12px;
+    box-shadow:var(--shadow);
+    padding:18px;
+    display:grid;
+    grid-template-columns: 1fr 320px;
+    gap:16px;
+    align-items:start;
+  }
+
+  header h1{
+    margin:0 0 6px 0;
+    color:var(--jungle-dark);
+    font-size:20px;
+  }
+  header p{
+    margin:0;
+    color:var(--muted);
+    font-size:13px;
+  }
+
+  /* canvas area */
+  .play-area{
+    background: linear-gradient(135deg, #e6f9ea 0%, #f8fff9 100%);
+    padding:14px;
+    border-radius:10px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:12px;
+  }
+
+  canvas{
+    width:100%;
+    max-width:640px;
+    background:
+      linear-gradient(90deg, rgba(27,122,58,0.03) 0%, rgba(27,122,58,0.01) 100%);
+    border-radius:8px;
+    box-shadow: 0 8px 20px rgba(27,122,58,0.06) inset;
+    image-rendering: pixelated;
+    cursor:crosshair;
+  }
+
+  /* right column: controls & info */
+  .controls{
+    padding:14px;
+    border-radius:10px;
+    background:linear-gradient(180deg, rgba(255,255,255,0.7), rgba(255,255,255,0.9));
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    min-width:260px;
+  }
+
+  .row{
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+
+  label{
+    font-size:13px;
+    color:var(--muted);
+  }
+
+  .btn{
+    background:var(--leaf);
+    color:white;
+    border:none;
+    padding:10px 12px;
+    border-radius:8px;
+    cursor:pointer;
+    font-weight:600;
+    box-shadow:0 6px 18px rgba(27,122,58,0.18);
+  }
+  .btn.secondary{
+    background:transparent;
+    color:var(--jungle-dark);
+    border:1px solid rgba(27,122,58,0.12);
+    box-shadow:none;
+  }
+
+  input[type="range"]{
+    width:100%;
+    -webkit-appearance:none;
+    height:8px;
+    background: linear-gradient(90deg,var(--jungle-green),var(--jungle-dark));
+    border-radius:6px;
+    outline:none;
+  }
+
+  .scorebox{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:8px 10px;
+    border-radius:8px;
+    background:var(--glass);
+    border:1px solid rgba(24,59,42,0.04);
+  }
+  .score{
+    font-size:20px;
+    font-weight:700;
+    color:var(--jungle-dark);
+  }
+  .small{
+    font-size:12px;
+    color:var(--muted);
+  }
+
+  .hint{
+    font-size:13px;
+    color:var(--muted);
+    line-height:1.4;
+    margin-top:6px;
+  }
+
+  /* mobile controls */
+  .mobile-controls{
+    display:none;
+    gap:10px;
+    justify-content:center;
+    margin-top:6px;
+  }
+  .m-btn{
+    width:54px;height:54px;border-radius:10px;border:none;background:var(--jungle-green);color:white;font-weight:700;
+    display:flex;align-items:center;justify-content:center;font-size:18px;
+  }
+
+  @media (max-width:860px){
+    .card{grid-template-columns:1fr; padding:14px;}
+    .controls{min-width:unset}
+    .mobile-controls{display:flex;}
+    canvas{max-width:520px}
+  }
+
+  footer{
+    margin-top:14px;
+    font-size:12px;
+    color:var(--muted);
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Jungle Snake</h1>
+      <p>A calm jungle-green take on the classic Snake game — adjust speed, keep score, play on desktop or mobile.</p>
+    </header>
+
+    <main class="card" role="main" aria-labelledby="gameTitle">
+      <section class="play-area" aria-label="Game area">
+        <canvas id="gameCanvas" width="640" height="640" role="img" aria-label="Snake game canvas"></canvas>
+
+        <div style="width:100%;max-width:640px;display:flex;justify-content:space-between;align-items:center;">
+          <div class="scorebox" style="width:48%;">
+            <div class="small">Score</div>
+            <div id="score" class="score">0</div>
+          </div>
+          <div class="scorebox" style="width:48%;">
+            <div class="small">High Score</div>
+            <div id="highScore" class="score">0</div>
+          </div>
+        </div>
+
+        <div class="hint" id="status">Press <strong>Space</strong> to Start / Pause. Use arrow keys or WASD to move.</div>
+
+        <div class="mobile-controls" aria-hidden="true">
+          <button class="m-btn" id="m-up">↑</button>
+        </div>
+        <div class="mobile-controls" aria-hidden="true" style="flex-direction:row;">
+          <button class="m-btn" id="m-left">←</button>
+          <div style="width:12px"></div>
+          <button class="m-btn" id="m-right">→</button>
+        </div>
+        <div class="mobile-controls" aria-hidden="true">
+          <button class="m-btn" id="m-down">↓</button>
+        </div>
+      </section>
+
+      <aside class="controls" aria-label="Game controls">
+        <div>
+          <label for="speedRange">Speed: <span id="speedLabel">5</span></label>
+          <input id="speedRange" type="range" min="2" max="14" value="5" />
+        </div>
+
+        <div class="row">
+          <button id="startBtn" class="btn">Start</button>
+          <button id="pauseBtn" class="btn secondary">Pause</button>
+          <button id="restartBtn" class="btn secondary">Restart</button>
+        </div>
+
+        <div>
+          <div class="small" style="margin-bottom:6px">Game info</div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <div><strong>Grid:</strong> 32 × 32</div>
+            <div><strong>Controls:</strong> Arrow keys / WASD / Mobile buttons</div>
+            <div><strong>Objective:</strong> Eat the fruit (bright leaf) to grow. Avoid walls & yourself.</div>
+          </div>
+        </div>
+
+        <div style="margin-top:6px;">
+          <div class="small">Theme</div>
+          <div style="font-weight:600;color:var(--jungle-dark);margin-top:4px">Jungle Green — calm, natural palette.</div>
+        </div>
+
+        <div style="margin-top:6px;">
+          <div class="small">Tips</div>
+          <ul style="margin:6px 0 0 16px;color:var(--muted)">
+            <li>Higher speed = more challenge.</li>
+            <li>Plan ahead — the snake grows quickly.</li>
+            <li>Press Space to pause anytime.</li>
+          </ul>
+        </div>
+      </aside>
+    </main>
+
+    <footer>
+      Built with ❤️ — refresh the page to reset the high score (or open dev tools to clear localStorage).
+    </footer>
+  </div>
+
+<script>
+/* Jungle Snake
+   Single-file game: canvas + logic.
+   Features: speed slider, score + high score (localStorage), pause/start/restart, mobile buttons.
+*/
+
+/* Canvas & sizing */
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d', { alpha: false });
+const DPR = window.devicePixelRatio || 1;
+
+function fitCanvas() {
+  // Keep internal resolution crisp and match CSS size while maintaining square.
+  const cssWidth = Math.min(640, Math.floor(window.innerWidth * 0.85));
+  canvas.style.width = cssWidth + 'px';
+  canvas.style.height = cssWidth + 'px';
+  canvas.width = cssWidth * DPR;
+  canvas.height = cssWidth * DPR;
+  ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+}
+fitCanvas();
+window.addEventListener('resize', () => {
+  fitCanvas();
+  draw(); // redraw to fit new size
+});
+
+/* Game config */
+const GRID = 32;             // number of cells per row/col
+let CELL = canvas.width / DPR / GRID; // pixel size per cell (calculated)
+function updateCellSize(){ CELL = canvas.width / DPR / GRID; }
+updateCellSize();
+
+let speed = parseInt(document.getElementById('speedRange').value, 10); // steps per second-ish
+const speedLabel = document.getElementById('speedLabel');
+speedLabel.textContent = speed;
+
+document.getElementById('speedRange').addEventListener('input', (e) => {
+  speed = parseInt(e.target.value, 10);
+  speedLabel.textContent = speed;
+});
+
+/* Game state */
+let snake = [{x:Math.floor(GRID/2), y:Math.floor(GRID/2)}]; // head is snake[0]
+let dir = {x:0,y:0}; // current direction
+let nextDir = {x:0,y:0}; // queued direction
+let food = null;
+let score = 0;
+let highScore = parseInt(localStorage.getItem('jungleSnakeHigh') || '0', 10) || 0;
+document.getElementById('highScore').textContent = highScore;
+
+let running = false;
+let lastTime = 0;
+let accum = 0;
+let stepInterval = 1000 / speed; // ms per move
+
+/* Helpers */
+function randomCell(){
+  return {
+    x: Math.floor(Math.random() * GRID),
+    y: Math.floor(Math.random() * GRID)
+  };
+}
+
+function placeFood(){
+  // make sure food does not appear on snake
+  let tries = 0;
+  do {
+    food = randomCell();
+    tries++;
+    if (tries > 1000) break;
+  } while (snake.some(s => s.x === food.x && s.y === food.y));
+}
+
+/* Initialize */
+placeFood();
+updateScoreDisplay();
+
+function updateScoreDisplay(){
+  document.getElementById('score').textContent = score;
+  document.getElementById('highScore').textContent = highScore;
+}
+
+/* Game update */
+function step(){
+  if (nextDir.x === -dir.x && nextDir.y === -dir.y) {
+    // ignore direct reverse input
+  } else {
+    dir = { ...nextDir };
+  }
+  if (dir.x === 0 && dir.y === 0) return; // not moving yet
+
+  const newHead = {x: snake[0].x + dir.x, y: snake[0].y + dir.y};
+
+  // collision with walls
+  if (newHead.x < 0 || newHead.x >= GRID || newHead.y < 0 || newHead.y >= GRID) {
+    gameOver();
+    return;
+  }
+
+  // collision with self
+  if (snake.some(seg => seg.x === newHead.x && seg.y === newHead.y)) {
+    gameOver();
+    return;
+  }
+
+  snake.unshift(newHead);
+
+  // did we eat food?
+  if (food && newHead.x === food.x && newHead.y === food.y) {
+    score += 10;
+    if (score > highScore) {
+      highScore = score;
+      localStorage.setItem('jungleSnakeHigh', String(highScore));
+    }
+    placeFood();
+    updateScoreDisplay();
+  } else {
+    // remove tail
+    snake.pop();
+  }
+}
+
+/* Game over */
+function gameOver(){
+  running = false;
+  dir = {x:0,y:0};
+  nextDir = {x:0,y:0};
+  document.getElementById('status').innerHTML = 'Game Over — Press <strong>Start</strong> to try again.';
+  // (snake remains visible as final state)
+}
+
+/* Start / Pause / Restart */
+function startGame(){
+  if (!running){
+    if (snake.length === 1 && dir.x === 0 && dir.y === 0) {
+      // starting fresh: set an initial movement to the right
+      nextDir = {x:1,y:0};
+    }
+    running = true;
+    lastTime = performance.now();
+    document.getElementById('status').textContent = 'Playing — use arrows or WASD. Press Space to pause.';
+    requestAnimationFrame(loop);
+  }
+}
+function pauseGame(){
+  running = false;
+  document.getElementById('status').textContent = 'Paused — press Start or Space to resume.';
+}
+function restartGame(){
+  // reset state
+  snake = [{x:Math.floor(GRID/2), y:Math.floor(GRID/2)}];
+  dir = {x:0,y:0};
+  nextDir = {x:0,y:0};
+  score = 0;
+  placeFood();
+  updateScoreDisplay();
+  running = false;
+  document.getElementById('status').textContent = 'Ready — press Start or Space to begin.';
+  draw();
+}
+
+/* Main loop using requestAnimationFrame with fixed-step based on speed */
+function loop(now){
+  if (!running) return;
+  const msPerStep = 1000 / speed; // faster speed = more steps per second
+  if (!lastTime) lastTime = now;
+  const delta = now - lastTime;
+  accum += delta;
+  lastTime = now;
+
+  // We may need to take multiple steps if accum is large (e.g., when resuming).
+  const maxSteps = 4; // avoid huge catch-ups
+  let steps = 0;
+  while (accum >= msPerStep && steps < maxSteps) {
+    updateCellSize();
+    step();
+    accum -= msPerStep;
+    steps++;
+  }
+
+  draw();
+  if (running) requestAnimationFrame(loop);
+}
+
+/* Drawing */
+function draw(){
+  updateCellSize();
+  const size = canvas.width / DPR;
+  // clear
+  ctx.fillStyle = '#f7fff8';
+  ctx.fillRect(0,0,size,size);
+
+  // draw grid subtle
+  ctx.save();
+  ctx.lineWidth = 0.4;
+  ctx.strokeStyle = 'rgba(27,122,58,0.05)';
+  for (let g=0; g<=GRID; g++){
+    ctx.beginPath();
+    ctx.moveTo(g*CELL, 0);
+    ctx.lineTo(g*CELL, size);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(0, g*CELL);
+    ctx.lineTo(size, g*CELL);
+    ctx.stroke();
+  }
+  ctx.restore();
+
+  // draw food (bright leaf)
+  if (food) {
+    const fx = food.x * CELL;
+    const fy = food.y * CELL;
+    drawRoundedRect(ctx, fx+CELL*0.08, fy+CELL*0.08, CELL*0.84, CELL*0.84, CELL*0.18, '#ffdf5a', '#1b7a3a'); // yellow leaf core
+    // leaf highlight
+    ctx.fillStyle = 'rgba(255,255,255,0.32)';
+    ctx.beginPath();
+    ctx.ellipse(fx + CELL*0.62, fy + CELL*0.38, CELL*0.12, CELL*0.08, -0.6, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  // draw snake with gradient head
+  for (let i=snake.length-1; i>=0; i--){
+    const seg = snake[i];
+    const x = seg.x * CELL;
+    const y = seg.y * CELL;
+    if (i === 0) {
+      // head
+      drawRoundedRect(ctx, x+1, y+1, CELL-2, CELL-2, Math.max(4, CELL*0.2), '#153e25', '#1b7a3a');
+      // eye
+      ctx.fillStyle = '#dcebde';
+      const ex = x + (dir.x >= 0 ? CELL*0.65 : CELL*0.35);
+      const ey = y + (dir.y >= 0 ? CELL*0.65 : CELL*0.35);
+      ctx.beginPath();
+      ctx.arc(ex, ey, Math.max(1, CELL*0.055), 0, Math.PI*2);
+      ctx.fill();
+    } else {
+      // body
+      const t = i / Math.max(1, snake.length - 1);
+      // a subtle color shift along the body
+      const col = lerpColor('#1b7a3a', '#0e4b26', 1 - t);
+      drawRoundedRect(ctx, x+1, y+1, CELL-2, CELL-2, Math.max(3, CELL*0.15), col, '#0f6d34');
+    }
+  }
+}
+
+/* small helper: rounded rect with gradient fill */
+function drawRoundedRect(ctx, x, y, w, h, r, colorA, colorB){
+  r = Math.min(r, w/2, h/2);
+  ctx.beginPath();
+  ctx.moveTo(x+r, y);
+  ctx.arcTo(x+w, y, x+w, y+h, r);
+  ctx.arcTo(x+w, y+h, x, y+h, r);
+  ctx.arcTo(x, y+h, x, y, r);
+  ctx.arcTo(x, y, x+w, y, r);
+  ctx.closePath();
+  const g = ctx.createLinearGradient(x, y, x+w, y+h);
+  g.addColorStop(0, colorA || '#1b7a3a');
+  g.addColorStop(1, colorB || '#0e4b26');
+  ctx.fillStyle = g;
+  ctx.fill();
+}
+
+/* Color lerp helper (hex) */
+function lerpColor(a, b, amount) {
+  const ah = parseInt(a.replace('#',''),16),
+        bh = parseInt(b.replace('#',''),16);
+  const ar = ah>>16, ag = (ah>>8)&0xff, ab = ah&0xff;
+  const br = bh>>16, bg = (bh>>8)&0xff, bb = bh&0xff;
+  const rr = Math.round(ar + (br-ar)*amount);
+  const rg = Math.round(ag + (bg-ag)*amount);
+  const rb = Math.round(ab + (bb-ab)*amount);
+  return '#' + (rr<<16 | rg<<8 | rb).toString(16).padStart(6,'0');
+}
+
+/* Input handling */
+const keyMap = {
+  ArrowUp:    {x:0,y:-1},
+  ArrowDown:  {x:0,y:1},
+  ArrowLeft:  {x:-1,y:0},
+  ArrowRight: {x:1,y:0},
+  w: {x:0,y:-1},
+  s: {x:0,y:1},
+  a: {x:-1,y:0},
+  d: {x:1,y:0},
+};
+
+window.addEventListener('keydown', (e) => {
+  const k = e.key;
+  if (k === ' '){ // space => toggle
+    e.preventDefault();
+    if (running) pauseGame(); else startGame();
+    return;
+  }
+  if (keyMap[k]) {
+    e.preventDefault();
+    const nd = keyMap[k];
+    // queue direction; will be applied at next step
+    // but prevent immediate reverse
+    if (nd.x === -dir.x && nd.y === -dir.y) return;
+    nextDir = nd;
+  }
+});
+
+document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('pauseBtn').addEventListener('click', pauseGame);
+document.getElementById('restartBtn').addEventListener('click', restartGame);
+
+/* Mobile buttons */
+['m-up','m-down','m-left','m-right'].forEach(id=>{
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.addEventListener('touchstart', (ev)=>{ ev.preventDefault(); onMobileControl(id); }, {passive:false});
+  el.addEventListener('mousedown', ()=> onMobileControl(id));
+});
+function onMobileControl(id){
+  if (id==='m-up') nextDir = {x:0,y:-1};
+  if (id==='m-down') nextDir = {x:0,y:1};
+  if (id==='m-left') nextDir = {x:-1,y:0};
+  if (id==='m-right') nextDir = {x:1,y:0};
+  // if not running, start
+  if (!running) startGame();
+}
+
+/* draw initial frame */
+draw();
+
+/* When speed slider changes while running, we should adapt the loop interval.
+   We'll set speed variable and requestAnimationFrame will use it automatically.
+*/
+document.getElementById('speedRange').addEventListener('change', () => {
+  // ensure no huge accum issues
+  accum = 0;
+});
+
+/* simple safety: when the tab is hidden, pause the game to avoid running in bg */
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    if (running) {
+      pauseGame();
+    }
+  }
+});
+
+/* Expose restart on double-click canvas */
+canvas.addEventListener('dblclick', () => {
+  restartGame();
+});
+
+/* Prevent scrolling on touch drag over canvas */
+canvas.addEventListener('touchmove', (e)=>{ e.preventDefault(); }, {passive:false});
+
+/* small beep on eating food (optional): create a tiny oscillator */
+function beep(){
+  try{
+    const ctxAudio = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctxAudio.createOscillator();
+    const g = ctxAudio.createGain();
+    o.connect(g); g.connect(ctxAudio.destination);
+    o.type = 'sine';
+    o.frequency.value = 880;
+    g.gain.setValueAtTime(0.0001, ctxAudio.currentTime);
+    g.gain.exponentialRampToValueAtTime(0.02, ctxAudio.currentTime + 0.01);
+    o.start();
+    g.gain.exponentialRampToValueAtTime(0.0001, ctxAudio.currentTime + 0.12);
+    o.stop(ctxAudio.currentTime + 0.13);
+  }catch(e){ /* audio may be blocked in some browsers */ }
+}
+
+/* Hook into step's food detection to play beep (monkey patch) */
+(function attachFoodSound(){
+  const origStep = step;
+  step = function(){
+    const headBefore = { ...snake[0] };
+    const prevFood = food ? {x:food.x,y:food.y} : null;
+    origStep();
+    // if food changed (we ate it), beep
+    if (prevFood && (!food || prevFood.x !== food.x || prevFood.y !== food.y)) {
+      beep();
+    }
+  };
+})();
+
+</script>
+</body>
+</html>

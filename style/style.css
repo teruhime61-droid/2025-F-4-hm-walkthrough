@@ -1,0 +1,70 @@
+body {
+    background-color: black;
+    color: yellow;
+}
+
+/* Heading 1 */
+h1 {
+    font-size: 36px;
+    color: white;
+    text-align: center;
+}
+
+/* Heading 2 */
+h2 {
+    color: navy;
+    text-decoration: underline;
+    font-style: italic;
+    font-weight: bold;
+}
+
+/* This is a p tag */
+p {
+    font-size: 25px;
+}
+.header{
+    z-index: 999;
+}
+/* Common class */
+.common {
+    background-color: rgb(48, 49, 49);
+    border: 2px solid white;
+    position: absolute;
+}
+
+/* Left class (I think you meant .left, not 'left') */
+.left {
+    top: 115px;
+    left: 15px;
+    width: 100px;
+    bottom: 40px;
+    position: absolute; /* You need this for top/left to work */
+}
+
+.main{
+    top:115px;
+    left:130px;
+    right:140px;
+    bottom:40px;
+}
+.right{
+    top:115px;
+    right:100px;
+    width:180px;
+    height:300px;
+}
+.footer{
+    bottom: 150px;
+    height:100px;
+    left:15px;
+    right:25px;
+    position: fixed;
+    background-color: rgb(48, 49, 49);
+    border: 2px solid white;
+
+    
+}
+.small-img {
+    width: 500px;
+    height: 500px;
+}
